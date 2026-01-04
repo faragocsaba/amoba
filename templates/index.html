@@ -13,9 +13,9 @@
         #btn-mcts { background-color: #e8f5e9; color: #2e7d32; }
         #btn-minimax:disabled, #btn-mcts:disabled { background-color: #ccc; color: #666; cursor: not-allowed; }
         #game-area { display: inline-block; position: relative; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
-        canvas { background-color: #F0D9B5; cursor: crosshair; }
+        canvas { cursor: crosshair; transition: background-color 0.3s; }
         #status { font-size: 18px; font-weight: bold; margin: 15px 0; min-height: 24px; }
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; color: white; font-size: 24px; font-weight: bold; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.1); display: flex; justify-content: center; align-items: center; color: #555; font-size: 24px; font-weight: bold; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
         .overlay.active { opacity: 1; pointer-events: auto; }
     </style>
 </head>
@@ -32,22 +32,24 @@
 
     <div id="game-area">
         <canvas id="board" width="450" height="450"></canvas>
-        <div id="overlay" class="overlay"></div>
+        <div id="overlay" class="overlay active">Válassz AI-t<br>a kezdéshez!</div>
     </div>
 
     <script>
-        // FONTOS: Relatív útvonal, így bárhol működik!
-        const API_URL = "/move"; 
-        
+        const API_URL = "/move";
+
         const BOARD_SIZE = 10;
         const CELL_SIZE = 40;
         const OFFSET = 25;
+
+        const COLOR_ACTIVE = "#F0D9B5";
+        const COLOR_INACTIVE = "#D3D3D3";
 
         const canvas = document.getElementById('board');
         const ctx = canvas.getContext('2d');
         const statusLbl = document.getElementById('status');
         const overlay = document.getElementById('overlay');
-        
+
         let board = [];
         let gameActive = false;
         let aiType = null;
@@ -60,9 +62,10 @@
 
         function drawBoard() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = "#F0D9B5";
+
+            ctx.fillStyle = gameActive ? COLOR_ACTIVE : COLOR_INACTIVE;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
+
             ctx.strokeStyle = "black";
             ctx.lineWidth = 1;
 
@@ -76,8 +79,14 @@
                 ctx.moveTo(OFFSET + i * CELL_SIZE + CELL_SIZE/2, OFFSET);
                 ctx.lineTo(OFFSET + i * CELL_SIZE + CELL_SIZE/2, OFFSET + BOARD_SIZE * CELL_SIZE);
                 ctx.stroke();
+
+                ctx.fillStyle = "black";
+                ctx.font = "10px Arial";
+                ctx.fillText(i, OFFSET/4, OFFSET + i * CELL_SIZE + CELL_SIZE/2 + 3);
+                ctx.fillText(i, OFFSET + i * CELL_SIZE + CELL_SIZE/2 - 3, OFFSET/2);
             }
 
+            // Kövek rajzolása
             for (let r = 0; r < BOARD_SIZE; r++) {
                 for (let c = 0; c < BOARD_SIZE; c++) {
                     if (board[r][c] !== '.') {
@@ -98,19 +107,27 @@
             aiType = type;
             gameActive = true;
             isProcessing = false;
-            initBoard();
+
             document.getElementById('btn-minimax').disabled = true;
             document.getElementById('btn-mcts').disabled = true;
             statusLbl.innerText = `Játék: Te (X) vs ${type === 'minimax' ? 'Minimax' : 'Monte-Carlo'} (O)`;
             overlay.classList.remove('active');
+
+            initBoard();
         }
 
         function endGame(message) {
             gameActive = false;
             statusLbl.innerText = message;
+
             document.getElementById('btn-minimax').disabled = false;
             document.getElementById('btn-mcts').disabled = false;
+
             alert(message);
+
+            overlay.innerHTML = "Játék vége!<br>Válassz ellenfelet.";
+            overlay.classList.add('active');
+            drawBoard();
         }
 
         canvas.addEventListener('click', async (e) => {
@@ -126,9 +143,10 @@
             const row = Math.floor(y / CELL_SIZE);
 
             if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE && board[row][col] === '.') {
+                // Ember lépése
                 board[row][col] = 'X';
                 drawBoard();
-                
+
                 isProcessing = true;
                 statusLbl.innerText = "A Gép gondolkodik...";
                 document.body.style.cursor = "wait";
@@ -142,12 +160,13 @@
 
                     if (!response.ok) throw new Error("Hiba a szerver kommunikációban");
                     const data = await response.json();
-                    
+
                     if (data.winner === 'X') { endGame("Gratulálok, nyertél!"); return; }
 
                     if (data.row !== -1) {
                         board[data.row][data.col] = 'O';
                         drawBoard();
+                        // Utolsó lépés jelölése
                         const cx = OFFSET + data.col * CELL_SIZE + CELL_SIZE/2;
                         const cy = OFFSET + data.row * CELL_SIZE + CELL_SIZE/2;
                         ctx.beginPath(); ctx.arc(cx, cy, 5, 0, 2*Math.PI); ctx.fillStyle="red"; ctx.fill();
@@ -167,10 +186,11 @@
             }
         });
 
-        initBoard();
         canvas.width = BOARD_SIZE * CELL_SIZE + OFFSET + 10;
         canvas.height = BOARD_SIZE * CELL_SIZE + OFFSET + 10;
-        drawBoard();
+
+        gameActive = false;
+        initBoard();
     </script>
 </body>
 </html>
