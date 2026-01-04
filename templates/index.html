@@ -13,6 +13,7 @@
         #btn-mcts { background-color: #e8f5e9; color: #2e7d32; }
         #btn-minimax:disabled, #btn-mcts:disabled { background-color: #ccc; color: #666; cursor: not-allowed; }
         #game-area { display: inline-block; position: relative; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        #impressum { padding: 15px 0px 0px 0px; }
         canvas { cursor: crosshair; transition: background-color 0.3s; }
         #status { font-size: 18px; font-weight: bold; margin: 15px 0; min-height: 24px; }
         .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.1); display: flex; justify-content: center; align-items: center; color: #555; font-size: 24px; font-weight: bold; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
@@ -33,6 +34,10 @@
     <div id="game-area">
         <canvas id="board" width="450" height="450"></canvas>
         <div id="overlay" class="overlay active">Válassz AI-t<br>a kezdéshez!</div>
+    </div>
+
+    <div id="impressum">
+        Az alkalmazást <a href="http://faragocsaba.hu">Faragó Csaba</a> készítette.
     </div>
 
     <script>
