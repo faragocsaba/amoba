@@ -123,8 +123,6 @@
             document.getElementById('btn-minimax').disabled = false;
             document.getElementById('btn-mcts').disabled = false;
 
-            alert(message);
-
             overlay.innerHTML = "Játék vége!<br>Válassz ellenfelet.";
             overlay.classList.add('active');
             drawBoard();
@@ -166,7 +164,6 @@
                     if (data.row !== -1) {
                         board[data.row][data.col] = 'O';
                         drawBoard();
-                        // Utolsó lépés jelölése
                         const cx = OFFSET + data.col * CELL_SIZE + CELL_SIZE/2;
                         const cy = OFFSET + data.row * CELL_SIZE + CELL_SIZE/2;
                         ctx.beginPath(); ctx.arc(cx, cy, 5, 0, 2*Math.PI); ctx.fillStyle="red"; ctx.fill();
