@@ -5,18 +5,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Amőba AI Aréna</title>
     <style>
-        body { font-family: 'Arial', sans-serif; text-align: center; background-color: #f0f0f0; margin: 0; padding: 20px; }
-        h1 { color: #333; }
-        #controls { margin-bottom: 20px; }
-        button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 0 10px; border: none; border-radius: 5px; transition: background 0.3s; }
+        body { font-family: 'Arial', sans-serif; text-align: center; background-color: #f0f0f0; margin: 0; padding: 10px; }
+        h1 { color: #333; font-size: 24px; margin-bottom: 10px; }
+
+        #controls { margin-bottom: 15px; }
+
+        button {
+            padding: 12px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+            width: 140px;
+        }
+
         #btn-minimax { background-color: #e1f5fe; color: #0277bd; }
         #btn-mcts { background-color: #e8f5e9; color: #2e7d32; }
         #btn-minimax:disabled, #btn-mcts:disabled { background-color: #ccc; color: #666; cursor: not-allowed; }
-        #game-area { display: inline-block; position: relative; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
-        #impressum { padding: 15px 0px 0px 0px; }
-        canvas { cursor: crosshair; transition: background-color 0.3s; }
-        #status { font-size: 18px; font-weight: bold; margin: 15px 0; min-height: 24px; }
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.1); display: flex; justify-content: center; align-items: center; color: #555; font-size: 24px; font-weight: bold; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
+
+        #game-area {
+            display: inline-block;
+            position: relative;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 450px;
+        }
+
+        #impressum {
+            padding: 15px 0px 0px 0px;
+        }
+
+        canvas {
+            width: 100%;
+            height: auto;
+            display: block;
+            cursor: crosshair;
+            transition: background-color 0.3s;
+        }
+
+        #status { font-size: 16px; font-weight: bold; margin: 10px 0; min-height: 24px; }
+
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.1);
+            display: flex; justify-content: center; align-items: center;
+            color: #555; font-size: 20px; font-weight: bold;
+            pointer-events: none; opacity: 0; transition: opacity 0.3s; text-align: center;
+        }
         .overlay.active { opacity: 1; pointer-events: auto; }
     </style>
 </head>
@@ -25,8 +62,8 @@
     <h1>Amőba AI Aréna</h1>
 
     <div id="controls">
-        <button id="btn-minimax" onclick="startGame('minimax')">Minimax AI (Számító)</button>
-        <button id="btn-mcts" onclick="startGame('montecarlo')">Monte-Carlo AI (Statisztikus)</button>
+        <button id="btn-minimax" onclick="startGame('minimax')">Minimax AI<br>(Számító)</button>
+        <button id="btn-mcts" onclick="startGame('montecarlo')">Monte-Carlo AI<br>(Statisztikus)</button>
     </div>
 
     <div id="status">Válassz ellenfelet a kezdéshez!</div>
@@ -40,7 +77,7 @@
         Az alkalmazást <a href="http://faragocsaba.hu">Faragó Csaba</a> készítette.
     </div>
 
-    <script>
+<script>
         const API_URL = "/move";
 
         const BOARD_SIZE = 10;
@@ -67,7 +104,6 @@
 
         function drawBoard() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
             ctx.fillStyle = gameActive ? COLOR_ACTIVE : COLOR_INACTIVE;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -84,14 +120,8 @@
                 ctx.moveTo(OFFSET + i * CELL_SIZE + CELL_SIZE/2, OFFSET);
                 ctx.lineTo(OFFSET + i * CELL_SIZE + CELL_SIZE/2, OFFSET + BOARD_SIZE * CELL_SIZE);
                 ctx.stroke();
-
-                ctx.fillStyle = "black";
-                ctx.font = "10px Arial";
-                ctx.fillText(i, OFFSET/4, OFFSET + i * CELL_SIZE + CELL_SIZE/2 + 3);
-                ctx.fillText(i, OFFSET + i * CELL_SIZE + CELL_SIZE/2 - 3, OFFSET/2);
             }
 
-            // Kövek rajzolása
             for (let r = 0; r < BOARD_SIZE; r++) {
                 for (let c = 0; c < BOARD_SIZE; c++) {
                     if (board[r][c] !== '.') {
@@ -112,22 +142,18 @@
             aiType = type;
             gameActive = true;
             isProcessing = false;
-
             document.getElementById('btn-minimax').disabled = true;
             document.getElementById('btn-mcts').disabled = true;
             statusLbl.innerText = `Játék: Te (X) vs ${type === 'minimax' ? 'Minimax' : 'Monte-Carlo'} (O)`;
             overlay.classList.remove('active');
-
             initBoard();
         }
 
         function endGame(message) {
             gameActive = false;
             statusLbl.innerText = message;
-
             document.getElementById('btn-minimax').disabled = false;
             document.getElementById('btn-mcts').disabled = false;
-
             overlay.innerHTML = "Játék vége!<br>Válassz ellenfelet.";
             overlay.classList.add('active');
             drawBoard();
@@ -137,8 +163,12 @@
             if (!gameActive || isProcessing) return;
 
             const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left - OFFSET;
-            const y = e.clientY - rect.top - OFFSET;
+
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+
+            const x = (e.clientX - rect.left) * scaleX - OFFSET;
+            const y = (e.clientY - rect.top) * scaleY - OFFSET;
 
             if (x < 0 || y < 0) return;
 
@@ -146,7 +176,6 @@
             const row = Math.floor(y / CELL_SIZE);
 
             if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE && board[row][col] === '.') {
-                // Ember lépése
                 board[row][col] = 'X';
                 drawBoard();
 
@@ -188,10 +217,11 @@
             }
         });
 
+        gameActive = false;
+
         canvas.width = BOARD_SIZE * CELL_SIZE + OFFSET + 10;
         canvas.height = BOARD_SIZE * CELL_SIZE + OFFSET + 10;
 
-        gameActive = false;
         initBoard();
     </script>
 </body>
